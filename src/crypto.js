@@ -1,29 +1,43 @@
-var createHash = require("@maooricio/react-native-expo-crypto").createHash;
+import * as Crypto from "expo-crypto";
 
-function ripemd160(buffer) {
-  return createHash("rmd160").update(buffer).digest();
+async function ripemd160(buffer) {
+  const hashBuffer = await Crypto.digest(
+    Crypto.CryptoDigestAlgorithm.RIPEMD160,
+    buffer
+  );
+  return new Uint8Array(hashBuffer);
 }
 
-function sha1(buffer) {
-  return createHash("sha1").update(buffer).digest();
+async function sha1(buffer) {
+  const hashBuffer = await Crypto.digest(
+    Crypto.CryptoDigestAlgorithm.SHA1,
+    buffer
+  );
+  return new Uint8Array(hashBuffer);
 }
 
-function sha256(buffer) {
-  return createHash("sha256").update(buffer).digest();
+async function sha256(buffer) {
+  const hashBuffer = await Crypto.digest(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    buffer
+  );
+  return new Uint8Array(hashBuffer);
 }
 
-function hash160(buffer) {
-  return ripemd160(sha256(buffer));
+async function hash160(buffer) {
+  const sha256Buffer = await sha256(buffer);
+  return ripemd160(sha256Buffer);
 }
 
-function hash256(buffer) {
-  return sha256(sha256(buffer));
+async function hash256(buffer) {
+  const firstPass = await sha256(buffer);
+  return sha256(firstPass);
 }
 
 module.exports = {
-  hash160: hash160,
-  hash256: hash256,
-  ripemd160: ripemd160,
-  sha1: sha1,
-  sha256: sha256,
+  hash160,
+  hash256,
+  ripemd160,
+  sha1,
+  sha256,
 };

@@ -1,25 +1,25 @@
-var createHmac = require("@maooricio/react-native-expo-crypto").createHmac;
+import { HmacSHA256 } from "crypto-es";
+import { WordArray } from "crypto-es/lib/core";
+import BigInteger from "bigi";
 var typeforce = require("typeforce");
 var types = require("./types");
 
-var BigInteger = require("bigi");
 var ECSignature = require("./ecsignature");
-
-var ZERO = new Buffer([0]);
-var ONE = new Buffer([1]);
 
 var ecurve = require("ecurve");
 var secp256k1 = ecurve.getCurveByName("secp256k1");
 
 // https://tools.ietf.org/html/rfc6979#section-3.2
-function deterministicGenerateK(hash, x, checkSig) {
+function deterministicGenerateK(hash, x, checkSig, secp256k1) {
   typeforce(
     types.tuple(types.Hash256bit, types.Buffer256bit, types.Function),
     arguments
   );
 
-  var k = new Buffer(32);
-  var v = new Buffer(32);
+  let k = WordArray.create(new Uint8Array(32));
+  let v = WordArray.create(new Uint8Array(32));
+  const ZERO = WordArray.create([0]);
+  const ONE = WordArray.create([1]);
 
   // Step A, ignored as hash already provided
   // Step B
@@ -29,43 +29,29 @@ function deterministicGenerateK(hash, x, checkSig) {
   k.fill(0);
 
   // Step D
-  k = createHmac("sha256", k)
-    .update(v)
-    .update(ZERO)
-    .update(x)
-    .update(hash)
-    .digest();
+  k = HmacSHA256(v.concat(ZERO).concat(x).concat(hash), k);
 
   // Step E
-  v = createHmac("sha256", k).update(v).digest();
+  v = HmacSHA256(v, k);
 
   // Step F
-  k = createHmac("sha256", k)
-    .update(v)
-    .update(ONE)
-    .update(x)
-    .update(hash)
-    .digest();
+  k = HmacSHA256(v.concat(ONE).concat(x).concat(hash), k);
 
   // Step G
-  v = createHmac("sha256", k).update(v).digest();
+  v = HmacSHA256(v, k);
 
   // Step H1/H2a, ignored as tlen === qlen (256 bit)
   // Step H2b
-  v = createHmac("sha256", k).update(v).digest();
+  v = HmacSHA256(v, k);
 
-  var T = BigInteger.fromBuffer(v);
+  let T = BigInteger.fromBuffer(Buffer.from(v.toString(), "hex"));
 
   // Step H3, repeat until T is within the interval [1, n - 1] and is suitable for ECDSA
   while (T.signum() <= 0 || T.compareTo(secp256k1.n) >= 0 || !checkSig(T)) {
-    k = createHmac("sha256", k).update(v).update(ZERO).digest();
-
-    v = createHmac("sha256", k).update(v).digest();
-
-    // Step H1/H2a, again, ignored as tlen === qlen (256 bit)
-    // Step H2b again
-    v = createHmac("sha256", k).update(v).digest();
-    T = BigInteger.fromBuffer(v);
+    k = HmacSHA256(v.concat(ZERO), k);
+    v = HmacSHA256(v, k);
+    v = HmacSHA256(v, k); // Repeated as per original logic
+    T = BigInteger.fromBuffer(Buffer.from(v.toString(), "hex"));
   }
 
   return T;

@@ -6,10 +6,8 @@
 
 [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
 
-
 ReactNative-ready fork of the [original bitcoinjs package](https://github.com/bitcoinjs/bitcoinjs-lib).
 Used by over a million wallet users and the backbone for almost all Bitcoin web wallets in production today.
-
 
 ## Features
 
@@ -29,7 +27,6 @@ Used by over a million wallet users and the backbone for almost all Bitcoin web 
 
 `yarn add react-native-expo-bitcoinjs-lib`
 
-
 ## Setup
 
 `yarn addreact-native-expo-bitcoinjs-lib expo-random`
@@ -41,15 +38,13 @@ Edit index.android.js and index.ios.js
 ```javascript
 import Bitcoin from 'react-native-expo-bitcoinjs-lib'
 [...]
-const keypair = Bitcoin.ECPair.makeRandom()
+const keypair = await Bitcoin.ECPair.makeRandom()
 console.log(keypair.getAddress()) // your brand new base58-encoded Bitcoin address
 ```
-
 
 ## Examples
 
 Run the example app or refer to the [original repository](https://github.com/bitcoinjs/bitcoinjs-lib#examples) for more available examples.
-
 
 ## Projects utilizing BitcoinJS [for Node.js and Browsers](https://github.com/bitcoinjs/bitcoinjs-lib)
 
@@ -82,13 +77,11 @@ Run the example app or refer to the [original repository](https://github.com/bit
 - [BCoin](https://github.com/indutny/bcoin) - BIP37 / Bloom Filters / SPV client
 - [insight](https://github.com/bitpay/insight) - A bitcoin blockchain API for web wallets.
 
-
 ## Alternatives
 
 There are currently no alternatives for React Native.
 
 ## LICENSE [MIT](LICENSE)
-
 
 ## Copyright
 

@@ -2,8 +2,7 @@ var baddress = require("./address");
 var bcrypto = require("./crypto");
 var ecdsa = require("./ecdsa");
 var toBuffer = require("typedarray-to-buffer");
-var randomBytesArray = require("expo-random").getRandomBytes(32);
-var randomBytes = toBuffer(randomBytesArray);
+import * as Crypto from "expo-crypto";
 
 var typeforce = require("typeforce");
 var types = require("./types");
@@ -15,6 +14,10 @@ var BigInteger = require("bigi");
 var ecurve = require("ecurve");
 var secp256k1 = ecdsa.__curve;
 
+async function getRandomBytesAsync() {
+  const randomBytesArray = await Crypto.getRandomBytesAsync(32);
+  return toBuffer(randomBytesArray); // Convert Uint8Array to Buffer if necessary
+}
 function ECPair(d, Q, options) {
   if (options) {
     typeforce(
@@ -94,25 +97,22 @@ ECPair.fromWIF = function (string, network) {
   });
 };
 
-ECPair.makeRandom = function (options) {
+ECPair.makeRandom = async function (options) {
   options = options || {};
 
-  var rng = options.rng || randomBytes;
+  var buffer = await (options.rng || getRandomBytesAsync());
 
   var d;
   do {
-    var buffer = rng;
-    typeforce(types.Buffer256bit, buffer);
-
     d = BigInteger.fromBuffer(buffer);
   } while (d.signum() <= 0 || d.compareTo(secp256k1.n) >= 0);
 
   return new ECPair(d, null, options);
 };
 
-ECPair.prototype.getAddress = function () {
+ECPair.prototype.getAddress = async function () {
   return baddress.toBase58Check(
-    bcrypto.hash160(this.getPublicKeyBuffer()),
+    await bcrypto.hash160(this.getPublicKeyBuffer()),
     this.getNetwork().pubKeyHash
   );
 };
