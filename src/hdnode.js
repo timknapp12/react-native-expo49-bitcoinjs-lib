@@ -1,6 +1,8 @@
 var base58check = require("bs58check")
 var bcrypto = require("./crypto")
-var createHmac = require("create-hmac")
+import { HmacSHA512 } from "crypto-es/lib/hmac-sha512"
+import { enc } from "crypto-es"
+
 var typeforce = require("typeforce")
 var types = require("./types")
 var NETWORKS = require("./networks")
@@ -26,7 +28,7 @@ function HDNode(keyPair, chainCode) {
 
 HDNode.HIGHEST_BIT = 0x80000000
 HDNode.LENGTH = 78
-HDNode.MASTER_SECRET = new Buffer("Bitcoin seed")
+HDNode.MASTER_SECRET = Buffer.from("Bitcoin seed")
 
 HDNode.fromSeedBuffer = function (seed, network) {
   typeforce(types.tuple(types.Buffer, types.maybe(types.Network)), arguments)
@@ -34,7 +36,7 @@ HDNode.fromSeedBuffer = function (seed, network) {
   if (seed.length < 16) throw new TypeError("Seed should be at least 128 bits")
   if (seed.length > 64) throw new TypeError("Seed should be at most 512 bits")
 
-  var I = createHmac("sha512", HDNode.MASTER_SECRET).update(seed).digest()
+  var I = HmacSHA512(seed, HDNode.MASTER_SECRET).toString(enc.Hex)
   var IL = I.slice(0, 32)
   var IR = I.slice(32)
 
@@ -49,7 +51,7 @@ HDNode.fromSeedBuffer = function (seed, network) {
 }
 
 HDNode.fromSeedHex = function (hex, network) {
-  return HDNode.fromSeedBuffer(new Buffer(hex, "hex"), network)
+  return HDNode.fromSeedBuffer(Buffer.from(hex, "hex"), network)
 }
 
 HDNode.fromBase58 = function (string, networks) {
@@ -175,7 +177,7 @@ HDNode.prototype.toBase58 = function (__isPrivate) {
   var version = !this.isNeutered()
     ? network.bip32.private
     : network.bip32.public
-  var buffer = new Buffer(78)
+  var buffer = Buffer.alloc(78)
 
   // 4 bytes: version bytes
   buffer.writeUInt32BE(version, 0)
@@ -213,7 +215,7 @@ HDNode.prototype.derive = function (index) {
   typeforce(types.UInt32, index)
 
   var isHardened = index >= HDNode.HIGHEST_BIT
-  var data = new Buffer(37)
+  var data = Buffer.alloc(37)
 
   // Hardened child
   if (isHardened) {
@@ -233,7 +235,7 @@ HDNode.prototype.derive = function (index) {
     data.writeUInt32BE(index, 33)
   }
 
-  var I = createHmac("sha512", this.chainCode).update(data).digest()
+  var I = HmacSHA512(data, this.chainCode).toString(enc.Hex)
   var IL = I.slice(0, 32)
   var IR = I.slice(32)
 
