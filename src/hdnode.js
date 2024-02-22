@@ -1,6 +1,6 @@
 var base58check = require('bs58check')
 var bcrypto = require('./crypto')
-import { HmacSHA512, enc } from 'crypto-es'
+import * as CryptoES from 'crypto-es'
 
 var typeforce = require('typeforce')
 var types = require('./types')
@@ -35,10 +35,10 @@ HDNode.fromSeedBuffer = function (seed, network) {
   if (seed.length < 16) throw new TypeError('Seed should be at least 128 bits')
   if (seed.length > 64) throw new TypeError('Seed should be at most 512 bits')
 
-  var I = HmacSHA512(
-    enc.Utf8.parse(seed.toString()),
-    enc.Utf8.parse(HDNode.MASTER_SECRET.toString())
-  ).toString(enc.Hex)
+  var I = CryptoES.HmacSHA512(
+    CryptoES.enc.Utf8.parse(seed.toString('hex')),
+    CryptoES.enc.Utf8.parse(HDNode.MASTER_SECRET.toString('hex'))
+  ).toString(CryptoES.enc.Hex)
   var IL = I.slice(0, 32)
   var IR = I.slice(32)
 
@@ -237,7 +237,7 @@ HDNode.prototype.derive = function (index) {
     data.writeUInt32BE(index, 33)
   }
 
-  var I = HmacSHA512(data, this.chainCode).toString(enc.Hex)
+  var I = CryptoES.HmacSHA512(data, this.chainCode).toString(CryptoES.enc.Hex)
   var IL = I.slice(0, 32)
   var IR = I.slice(32)
 
