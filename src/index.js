@@ -11,5 +11,10 @@ module.exports = {
   crypto: require('./crypto'),
   networks: require('./networks'),
   opcodes: require('bitcoin-ops'),
-  script: require('./script')
+  script: require('./script'),
+  bip32: require('./bip32'),
+  payments: {
+    p2pkh: require('./payments/p2pkh'),
+    // Add other payment types as needed
+  },
 }

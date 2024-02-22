@@ -4,7 +4,7 @@
 
 React Native-ready fork of [react-native-expo-bitcoinjs-lib](https://github.com/maooricio/react-native-expo-bitcoinjs-lib) which was a fork of the [original bitcoinjs package](https://github.com/bitcoinjs/bitcoinjs-lib).
 
-I needed a bitcoinjs-lib version that was compatible with react-native and expo sdk 49. The repo I forked [react-native-expo-bitcoinjs-lib](https://github.com/maooricio/react-native-expo-bitcoinjs-lib) used `expo-random`, which is deprecated and no longer supported in expo sdk 49. So I replaced the code using `expo-random` with `expo-crypto`. Test first before you trust it! It should have the same functionality and API as [bitcoinjs-lib](https://github.com/bitcoinjs/bitcoinjs-lib).
+I needed a bitcoinjs-lib version that was compatible with react-native and expo sdk 49. The repo I forked [react-native-expo-bitcoinjs-lib](https://github.com/maooricio/react-native-expo-bitcoinjs-lib) used `expo-random`, which is deprecated and no longer supported in expo sdk 49. So I replaced the code using `expo-random` with `expo-crypto`. Test first before you trust it!
 
 ## Installation
 
