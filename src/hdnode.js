@@ -1,23 +1,22 @@
-var base58check = require("bs58check")
-var bcrypto = require("./crypto")
-import { HmacSHA512 } from "crypto-es/lib/hmac-sha512"
-import { enc } from "crypto-es"
+var base58check = require('bs58check')
+var bcrypto = require('./crypto')
+import { HmacSHA512, enc } from 'crypto-es'
 
-var typeforce = require("typeforce")
-var types = require("./types")
-var NETWORKS = require("./networks")
+var typeforce = require('typeforce')
+var types = require('./types')
+var NETWORKS = require('./networks')
 
-var BigInteger = require("bigi")
-var ECPair = require("./ecpair")
+var BigInteger = require('bigi')
+var ECPair = require('./ecpair')
 
-var ecurve = require("ecurve")
-var curve = ecurve.getCurveByName("secp256k1")
+var ecurve = require('ecurve')
+var curve = ecurve.getCurveByName('secp256k1')
 
 function HDNode(keyPair, chainCode) {
-  typeforce(types.tuple("ECPair", types.Buffer256bit), arguments)
+  typeforce(types.tuple('ECPair', types.Buffer256bit), arguments)
 
   if (!keyPair.compressed)
-    throw new TypeError("BIP32 only allows compressed keyPairs")
+    throw new TypeError('BIP32 only allows compressed keyPairs')
 
   this.keyPair = keyPair
   this.chainCode = chainCode
@@ -28,15 +27,18 @@ function HDNode(keyPair, chainCode) {
 
 HDNode.HIGHEST_BIT = 0x80000000
 HDNode.LENGTH = 78
-HDNode.MASTER_SECRET = Buffer.from("Bitcoin seed")
+HDNode.MASTER_SECRET = Buffer.from('Bitcoin seed')
 
 HDNode.fromSeedBuffer = function (seed, network) {
   typeforce(types.tuple(types.Buffer, types.maybe(types.Network)), arguments)
 
-  if (seed.length < 16) throw new TypeError("Seed should be at least 128 bits")
-  if (seed.length > 64) throw new TypeError("Seed should be at most 512 bits")
+  if (seed.length < 16) throw new TypeError('Seed should be at least 128 bits')
+  if (seed.length > 64) throw new TypeError('Seed should be at most 512 bits')
 
-  var I = HmacSHA512(seed, HDNode.MASTER_SECRET).toString(enc.Hex)
+  var I = HmacSHA512(
+    enc.Utf8.parse(seed.toString()),
+    enc.Utf8.parse(HDNode.MASTER_SECRET.toString())
+  ).toString(enc.Hex)
   var IL = I.slice(0, 32)
   var IR = I.slice(32)
 
@@ -51,12 +53,12 @@ HDNode.fromSeedBuffer = function (seed, network) {
 }
 
 HDNode.fromSeedHex = function (hex, network) {
-  return HDNode.fromSeedBuffer(Buffer.from(hex, "hex"), network)
+  return HDNode.fromSeedBuffer(Buffer.from(hex, 'hex'), network)
 }
 
 HDNode.fromBase58 = function (string, networks) {
   var buffer = base58check.decode(string)
-  if (buffer.length !== 78) throw new Error("Invalid buffer length")
+  if (buffer.length !== 78) throw new Error('Invalid buffer length')
 
   // 4 bytes: version bytes
   var version = buffer.readUInt32BE(0)
@@ -70,7 +72,7 @@ HDNode.fromBase58 = function (string, networks) {
       })
       .pop()
 
-    if (!network) throw new Error("Unknown network version")
+    if (!network) throw new Error('Unknown network version')
 
     // otherwise, assume a network object (or default to bitcoin)
   } else {
@@ -78,7 +80,7 @@ HDNode.fromBase58 = function (string, networks) {
   }
 
   if (version !== network.bip32.private && version !== network.bip32.public)
-    throw new Error("Invalid network version")
+    throw new Error('Invalid network version')
 
   // 1 byte: depth: 0x00 for master nodes, 0x01 for level-1 descendants, ...
   var depth = buffer[4]
@@ -87,13 +89,13 @@ HDNode.fromBase58 = function (string, networks) {
   var parentFingerprint = buffer.readUInt32BE(5)
   if (depth === 0) {
     if (parentFingerprint !== 0x00000000)
-      throw new Error("Invalid parent fingerprint")
+      throw new Error('Invalid parent fingerprint')
   }
 
   // 4 bytes: child number. This is the number i in xi = xpar/i, with xi the key being serialized.
   // This is encoded in MSB order. (0x00000000 if master key)
   var index = buffer.readUInt32BE(9)
-  if (depth === 0 && index !== 0) throw new Error("Invalid index")
+  if (depth === 0 && index !== 0) throw new Error('Invalid index')
 
   // 32 bytes: the chain code
   var chainCode = buffer.slice(13, 45)
@@ -101,7 +103,7 @@ HDNode.fromBase58 = function (string, networks) {
 
   // 33 bytes: private key data (0x00 + k)
   if (version === network.bip32.private) {
-    if (buffer.readUInt8(45) !== 0x00) throw new Error("Invalid private key")
+    if (buffer.readUInt8(45) !== 0x00) throw new Error('Invalid private key')
 
     var d = BigInteger.fromBuffer(buffer.slice(46, 78))
     keyPair = new ECPair(d, null, { network: network })
@@ -170,7 +172,7 @@ HDNode.prototype.verify = function (hash, signature) {
 
 HDNode.prototype.toBase58 = function (__isPrivate) {
   if (__isPrivate !== undefined)
-    throw new TypeError("Unsupported argument in 2.0.0")
+    throw new TypeError('Unsupported argument in 2.0.0')
 
   // Version
   var network = this.keyPair.network
@@ -220,7 +222,7 @@ HDNode.prototype.derive = function (index) {
   // Hardened child
   if (isHardened) {
     if (this.isNeutered())
-      throw new TypeError("Could not derive hardened child key")
+      throw new TypeError('Could not derive hardened child key')
 
     // data = 0x00 || ser256(kpar) || ser32(index)
     data[0] = 0x00
@@ -301,10 +303,10 @@ HDNode.prototype.isNeutered = function () {
 HDNode.prototype.derivePath = function (path) {
   typeforce(types.BIP32Path, path)
 
-  var splitPath = path.split("/")
-  if (splitPath[0] === "m") {
+  var splitPath = path.split('/')
+  if (splitPath[0] === 'm') {
     if (this.parentFingerprint) {
-      throw new Error("Not a master node")
+      throw new Error('Not a master node')
     }
 
     splitPath = splitPath.slice(1)

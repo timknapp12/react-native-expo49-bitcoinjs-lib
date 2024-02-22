@@ -1,6 +1,6 @@
 {
   "name": "react-native-expo49-bitcoinjs-lib",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Client-side Bitcoin JavaScript library for React Native using Expo Crypto",
   "main": "./src/index.js",
   "engines": {
